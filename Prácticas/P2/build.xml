@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JFlexProject" default="run" basedir=".">
+
+    <!-- Definimos algunas propiedades  -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="jflex.file" value="${src.dir}/main/jflex/Lexer.flex"/>
+    <property name="lexer.java" value="${src.dir}/main/jflex/Lexer.java"/>
+    <property name="main.class" value="main.jflex.Lexer"/>
+    <property name="input.file" value="input.txt"/>
+
+    <!-- Limpiamos el directorio de compilacion -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Generaramos nuestro analizador lexico con JFlex (usando sudo) -->
+    <target name="generate" depends="clean">
+        <mkdir dir="${build.dir}"/>
+        <exec executable="sudo">
+            <arg value="jflex"/>
+            <arg value="${jflex.file}"/>
+        </exec>
+    </target>
+
+    <!-- Compilamos el codigo generado -->
+    <target name="compile" depends="generate">
+        <mkdir dir="${build.dir}"/>
+        <javac sourcepath="${src.dir}" destdir="${build.dir}">
+            <src path="${src.dir}"/>
+            <include name="main/jflex/Lexer.java"/>
+        </javac>
+    </target>
+
+    <!-- Ejecutamos el programa -->
+    <target name="run" depends="compile">
+        <java classname="${main.class}" fork="true" classpath="${build.dir}">
+            <arg value="${input.file}"/>
+        </java>
+    </target>
+
+</project>
