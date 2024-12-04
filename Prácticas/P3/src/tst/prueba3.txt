@@ -1,0 +1,14 @@
+int count;
+float total;
+
+count = 0;
+total = 0.0;
+
+while (count) {
+    count = count + 1;
+    total = total + (count / 5.0);
+}
+
+if (total) {
+    count = count - 2;
+}

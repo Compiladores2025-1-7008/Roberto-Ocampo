@@ -1,0 +1,8 @@
+int a, b
+float c;
+
+a = 10
+b = a + 5;
+
+while (a) {
+    a = a + 1;
