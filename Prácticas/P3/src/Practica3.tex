@@ -1,0 +1,190 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{pdflscape}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  filecolor=magenta,
+  urlcolor=blue,
+}
+
+\setlength{\parindent}{0pt}
+
+\title{Compiladores: Práctica 3}
+\author{Roberto Ocampo Villegas}
+\date{23 de Septiembre de 2024}
+
+\begin{document}
+
+\maketitle
+
+\section*{Determinación de los conjuntos \( N \), \( \Sigma \) y el símbolo inicial \( S \)}
+
+Dada la gramática \( G = (N, \Sigma, P, S) \), con las producciones P:
+
+{\renewcommand{\labelitemi}{--}
+\begin{itemize}
+    \item \( \text{programa} \to \text{declaraciones sentencias} \)
+    \item \( \text{declaraciones} \to \text{declaraciones declaracion} \mid \text{declaracion} \)
+    \item \( \text{declaracion} \to \text{tipo lista-var ;} \)
+    \item \( \text{tipo} \to \text{int} \mid \text{float} \)
+    \item \( \text{lista-var} \to \text{lista-var , identificador} \mid \text{identificador} \)
+    \item \( \text{sentencias} \to \text{sentencias sentencia} \mid \text{sentencia} \)
+    \item \( \text{sentencia} \to \text{identificador = expresion ;} \mid \text{if ( expresion ) sentencias else sentencias} \mid \text{while ( expresion ) sentencias} \)
+    \item \( \text{expresion} \to \text{expresion + expresion} \mid \text{expresion - expresion} \mid \text{expresion * expresion} \mid \text{expresion / expresion} \mid \text{identificador} \mid \text{numero} \)
+    \item \( \text{expresion} \to ( \text{expresion} ) \)
+\end{itemize}
+}
+
+\begin{itemize}
+    \item \textbf{Conjunto de no terminales} \( N \):
+    \[
+    N = \{ \text{programa}, \text{declaraciones}, \text{declaracion}, \text{tipo}, \text{lista-var}, \text{sentencias}, \text{sentencia}, \text{expresion} \}
+    \]
+
+    \item \textbf{Conjunto de terminales} \( \Sigma \):
+    \[
+    \Sigma = \{ \text{int}, \text{float}, \text{identificador}, \text{;} , \text{,}, \text{=}, \text{if}, \text{else}, \text{while}, \text{(}, \text{)}, \text{+}, \text{-}, \text{*}, \text{/}, \text{numero} \}
+    \]
+
+    \item \textbf{Símbolo inicial} \( S \):
+    \[
+    S = \text{programa}
+    \]
+\end{itemize}
+
+\section*{Eliminación de ambigüedad}
+
+Podemos ver que en la gramática dada hay una ambigüedad en la producción de expresiones:\\\\
+
+\( \text{expresion} \to \text{expresion + expresion} \mid \text{expresion - expresion} \mid \text{expresion * expresion} \mid \text{expresion / expresion} \mid \text{identificador} \mid \text{numero} \)\\\\
+
+
+Esta ambigüedad ocurre debido a que no se especifica el orden de las operaciones, es decir, las operaciones de suma, resta, multiplicación y división se pueden interpretar de distintas formas.
+
+Para resolver esta ambigüedad, reorganizamos las producciones de las expresiones para reflejar la precedencia y la asociatividad:
+
+\subsection*{Producciones actualizadas para las operaciones aritméticas}
+
+\begin{align*}
+\text{expresion} &\rightarrow \text{expresion\_suma} \\
+\text{expresion\_suma} &\rightarrow \text{expresion\_suma } + \text{ expresion\_mult} \\
+                      &\;|\; \text{expresion\_suma } - \text{ expresion\_mult} \\
+                      &\;|\; \text{expresion\_mult} \\
+\text{expresion\_mult} &\rightarrow \text{expresion\_mult } * \text{ termino} \\
+                      &\;|\; \text{expresion\_mult } / \text{ termino} \\
+                      &\;|\; \text{termino} \\
+\text{termino} &\rightarrow \text{identificador} \\
+               &\;|\; \text{numero} \\
+               &\;|\; ( \text{expresion} ) \\
+\end{align*}
+
+\subsection*{Gramática sin ambigüedad}
+
+\begin{align*}
+\text{programa} &\rightarrow \text{declaraciones sentencias} \\
+\text{declaraciones} &\rightarrow \text{declaraciones declaracion} \\
+                     &\;|\; \text{declaracion} \\
+\text{declaracion} &\rightarrow \text{tipo lista-var ;} \\
+\text{tipo} &\rightarrow \text{int} \\
+            &\;|\; \text{float} \\
+\text{lista-var} &\rightarrow \text{lista-var , identificador} \\
+                 &\;|\; \text{identificador} \\
+\text{sentencias} &\rightarrow \text{sentencias sentencia} \\
+                  &\;|\; \text{sentencia} \\
+\text{sentencia} &\rightarrow \text{identificador = expresion ;} \\
+                 &\;|\; \text{if ( expresion ) sentencias else sentencias} \\
+                 &\;|\; \text{while ( expresion ) sentencias} \\
+\text{expresion} &\rightarrow \text{expresion\_suma} \\
+\text{expresion\_suma} &\rightarrow \text{expresion\_suma } + \text{ expresion\_mult} \\
+                      &\;|\; \text{expresion\_suma } - \text{ expresion\_mult} \\
+                      &\;|\; \text{expresion\_mult} \\
+\text{expresion\_mult} &\rightarrow \text{expresion\_mult } * \text{ termino} \\
+                      &\;|\; \text{expresion\_mult } / \text{ termino} \\
+                      &\;|\; \text{termino} \\
+\text{termino} &\rightarrow \text{identificador} \\
+               &\;|\; \text{numero} \\
+               &\;|\; ( \text{expresion} ) \\
+\end{align*}\\\\
+
+\section*{Eliminación de recursividad izquierda}
+
+En la gramática dada, podemos identificar casos de recursividad izquierda en las producciones de \textit{declaraciones}, \textit{lista-var}, \textit{sentencias}, \textit{expresion\_suma} y \textit{expresion\_mult}. Utilizando el algoritmo visto en clase para eliminar la recursivdad, hacemos la actualización.
+
+\subsection*{Gramática actualizada sin recursividad izquierda}
+
+\[
+\begin{aligned}
+\text{programa} &\to \text{declaraciones sentencias} \\
+\text{declaraciones} &\to \text{declaracion declaraciones'} \\
+\text{declaraciones'} &\to \text{declaracion declaraciones'} \;|\; \varepsilon \\
+\text{declaracion} &\to \text{tipo lista-var ;} \\
+\text{tipo} &\to \text{int} \;|\; \text{float} \\
+\text{lista-var} &\to \text{identificador lista-var'} \\
+\text{lista-var'} &\to , \text{ identificador lista-var'} \;|\; \varepsilon \\
+\text{sentencias} &\to \text{sentencia sentencias'} \\
+\text{sentencias'} &\to \text{sentencia sentencias'} \;|\; \varepsilon \\
+\text{sentencia} &\to \text{identificador = expresion ;} \;|\; \text{if ( expresion ) sentencias else sentencias} \;|\; \text{while ( expresion ) sentencias} \\
+\text{expresion} &\to \text{expresion\_suma} \\
+\text{expresion\_suma} &\to \text{expresion\_mult expresion\_suma'} \\
+\text{expresion\_suma'} &\to + \text{ expresion\_mult expresion\_suma'} \;|\; - \text{ expresion\_mult expresion\_suma'} \;|\; \varepsilon \\
+\text{expresion\_mult} &\to \text{termino expresion\_mult'} \\
+\text{expresion\_mult'} &\to * \text{ termino expresion\_mult'} \;|\; / \text{ termino expresion\_mult'} \;|\; \varepsilon \\
+\text{termino} &\to \text{identificador} \;|\; \text{numero} \;|\; ( \text{expresion} )
+\end{aligned}
+\]
+
+\subsection*{Proceso de factorización izquierda}
+
+No es necesario realizar el proceso de factorización izquierda, ya que la gramática no presenta factores comunes al inicio de las producciones.
+
+
+\section*{Nuevos conjuntos \( N \) y \( P \)}
+
+Después de los procesos de eliminación de ambigüedad, recursividad izquierda y factorización izquierda, los conjuntos actualizados son los siguientes:
+
+\subsection*{Conjunto de no terminales (\( N \))}
+
+\[
+\begin{aligned}
+N = \{ &\text{programa}, \text{declaraciones}, \text{declaraciones'}, \text{declaracion}, \text{tipo}, \\
+       &\text{lista-var}, \text{lista-var'}, \text{sentencias}, \text{sentencias'}, \text{sentencia}, \\
+       &\text{expresion}, \text{expresion\_suma}, \text{expresion\_suma'}, \text{expresion\_mult}, \\
+       &\text{expresion\_mult'}, \text{termino} \}
+\end{aligned}
+\]
+
+
+\subsection*{Conjunto de producciones (\( P \))}
+
+\[
+P =
+\begin{aligned}
+& \text{programa} \to \text{declaraciones sentencias} \\
+& \text{declaraciones} \to \text{declaracion declaraciones'} \\
+& \text{declaraciones'} \to \text{declaracion declaraciones'} \;|\; \varepsilon \\
+& \text{declaracion} \to \text{tipo lista-var ;} \\
+& \text{tipo} \to \text{int} \;|\; \text{float} \\
+& \text{lista-var} \to \text{identificador lista-var'} \\
+& \text{lista-var'} \to , \text{ identificador lista-var'} \;|\; \varepsilon \\
+& \text{sentencias} \to \text{sentencia sentencias'} \\
+& \text{sentencias'} \to \text{sentencia sentencias'} \;|\; \varepsilon \\
+& \text{sentencia} \to \text{identificador = expresion ;} \;|\; \text{if ( expresion ) sentencias else sentencias} \;|\; \text{while ( expresion ) sentencias} \\
+& \text{expresion} \to \text{expresion\_suma} \\
+& \text{expresion\_suma} \to \text{expresion\_mult expresion\_suma'} \\
+& \text{expresion\_suma'} \to + \text{ expresion\_mult expresion\_suma'} \;|\; - \text{ expresion\_mult expresion\_suma'} \;|\; \varepsilon \\
+& \text{expresion\_mult} \to \text{termino expresion\_mult'} \\
+& \text{expresion\_mult'} \to * \text{ termino expresion\_mult'} \;|\; / \text{ termino expresion\_mult'} \;|\; \varepsilon \\
+& \text{termino} \to \text{identificador} \;|\; \text{numero} \;|\; ( \text{expresion} )
+\end{aligned}
+\]
+
+\end{document}
